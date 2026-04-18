@@ -1,28 +1,40 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, screen } = require('electron'); // Added screen
 const path = require('path');
 
 function createWindow() {
+  // Get the primary display's dimensions
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.workAreaSize;
+
+  const winWidth = 300;
+  const winHeight = 300;
+
+  // Calculate coordinates: 
+  // X = Total width minus window width
+  // Y = Half of screen height minus half of window height
+  const x = width - winWidth;
+  const y = Math.floor((height - winHeight) / 2);
+
   const win = new BrowserWindow({
-    width: 300,
-    height: 300,
-    transparent: true,      // Makes the background transparent
-    frame: false,            // Removes title bar and borders
-    alwaysOnTop: true,       // Keeps character above other windows
+    width: winWidth,
+    height: winHeight,
+    x: x,
+    y: y,
+    transparent: true,
+    frame: false,
+    alwaysOnTop: true,
     resizable: false,
-    skipTaskbar: true,       // Optional: hides it from the taskbar
+    skipTaskbar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: true,    // Allows using 'ws' in renderer.js
+      contextIsolation: false   // Required if nodeIntegration is true
     },
   });
 
   win.loadFile('index.html');
 
-  // Position it in the bottom right corner
-  // You might want to calculate this based on screen size later
-  win.setPosition(1600, 800); 
-
-  // CRITICAL: This allows you to click "through" the transparent parts
-  // We will toggle this based on mouse hover in the renderer
+  // Logic to handle mouse transparency (same as before)
   ipcMain.on('set-ignore-mouse', (event, ignore, options) => {
     win.setIgnoreMouseEvents(ignore, options);
   });
