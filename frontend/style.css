@@ -1,0 +1,17 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: transparent !important; /* Vital for transparency */
+}
+
+#character {
+    width: 200px;
+    height: 200px;
+    cursor: pointer;
+}
+
+#pet-img {
+    width: 100%;
+    height: auto;
+}
