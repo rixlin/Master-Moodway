@@ -37,6 +37,10 @@ class AudioStream:
         # Buffer
         self.audio_buffer = []
         self.audio_buffer_lock = threading.Lock()
+
+        # Shared emotion state consumed by run_audio.
+        self.emotion_lock = threading.Lock()
+        self.latest_anger_confidence = 0.0
         
     def _audio_callback(self, in_data, frame_count, time_info, status) -> tuple:
         """Routes audio to speakers AND saves a copy to the buffer for the ML model."""
@@ -69,10 +73,12 @@ class AudioStream:
             # Run inference and print results
             try:
                 predictions = self.emotion_classifier(audio_array)
-                # top_prediction = predictions[0] # Grab the most confident class
-                # logger.info(f"Detected emotion: {top_prediction['label']} (Confidence: {top_prediction['score']:.2f})")
+                anger_confidence = float(next(pred['score'] for pred in predictions if pred['label'] == 'ang'))
                 
-                logger.info(f"Full predictions: {predictions}")
+                with self.emotion_lock:
+                    self.latest_anger_confidence = anger_confidence
+
+                logger.info(f"Detected anger confidence: {anger_confidence:.2f}")
             except Exception as e:
                 logger.error(f"Inference error: {e}")
 
@@ -117,10 +123,16 @@ def run_audio(sio):
         
         # Keep the main thread alive
         while live_audio.stream_active:
-            # TODO: emit to sio
+            with live_audio.emotion_lock:
+                anger_confidence = live_audio.latest_anger_confidence
+
+            sio.emit('audio_message', {'data': anger_confidence})
             time.sleep(0.1)
             
     except Exception as e:
         logger.error(f"An error occurred: {e}")
     finally:
         live_audio.stop()
+
+# if __name__ == "__main__":
+#     run_audio(None)
