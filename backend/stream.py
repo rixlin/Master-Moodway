@@ -9,6 +9,7 @@ cap = cv2.VideoCapture(0)
 
 while True:
     ret, frame = cap.read()
+    running_anger = 0
     if not ret:
         break
 
@@ -32,9 +33,10 @@ while True:
             # 4. Draw the custom "Marker"
             # Green box for the face
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            
+            adjust_anger = 0.8 * running_anger + 0.2 * anger_score
+            running_anger = adjust_anger
             # Display Anger Weight
-            label = f"Anger: {anger_score:.2f}%"
+            label = f"Anger: {running_anger:.2f}%"
             cv2.putText(frame, label, (x, y - 10), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
