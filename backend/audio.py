@@ -1,3 +1,4 @@
+import eventlet
 import logging
 import numpy as np
 import pyaudio
@@ -74,7 +75,7 @@ class AudioStream:
             try:
                 predictions = self.emotion_classifier(audio_array)
                 anger_confidence = float(next(pred['score'] for pred in predictions if pred['label'] == 'ang'))
-                
+
                 with self.emotion_lock:
                     self.latest_anger_confidence = anger_confidence
 
@@ -123,11 +124,11 @@ def run_audio(sio):
         
         # Keep the main thread alive
         while live_audio.stream_active:
+            eventlet.sleep(0)
             with live_audio.emotion_lock:
                 anger_confidence = live_audio.latest_anger_confidence
 
             sio.emit('audio_message', {'data': anger_confidence})
-            time.sleep(0.1)
             
     except Exception as e:
         logger.error(f"An error occurred: {e}")
