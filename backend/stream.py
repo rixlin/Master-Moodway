@@ -46,6 +46,7 @@ def run_camera(sio):
                 label = f"Anger: {anger_score:.2f}%"
                 cv2.putText(frame, label, (x, y - 10), 
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                sio.emit('message', {'data': anger_score})
 
         except Exception as e:
             print(f"Error: {e}")
