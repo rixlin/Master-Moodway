@@ -1,22 +1,27 @@
-const WebSocket = require('ws');
+const { io } = require('socket.io-client');
 
-// 1. Connect to your Backend (Python/FastAPI/etc)
-const socket = new WebSocket('ws://localhost:8765');
+// Connect using the Socket.IO protocol (matches backend/server.py)
+const socket = io('http://localhost:5000', {
+    transports: ['websocket', 'polling']
+});
 
 const petImg = document.getElementById('pet-img');
 const speechBubble = document.getElementById('speech-bubble');
 
-// 2. Listen for the connection to open
-socket.on('open', () => {
-    console.log('Connected to Oogway Backend');
+// 2. Listen for successful Socket.IO connection
+socket.on('connect', () => {
+    console.log('Connected to Oogway Backend:', socket.id);
 });
 
 // 3. Handle incoming messages
 socket.on('message', (data) => {
-    // Assuming your backend sends JSON: { "emotion": "sad", "message": "Inner peace..." }
-    const response = JSON.parse(data);
+    console.log('Received message from backend:', data);
+    const anger = data?.data;
+    const text = typeof anger === 'number'
+        ? `Anger: ${anger.toFixed(2)}%`
+        : (data?.message || 'Received update from backend');
 
-    displayMessage(response.message);
+    displayMessage(text);
     
     // Optional: Trigger talking animation/state
     triggerTalkingState();
@@ -43,6 +48,6 @@ function triggerTalkingState() {
 }
 
 // 4. Handle errors
-socket.on('error', (error) => {
-    console.error('WebSocket Error:', error);
+socket.on('connect_error', (error) => {
+    console.error('Socket.IO Connection Error:', error.message);
 });
