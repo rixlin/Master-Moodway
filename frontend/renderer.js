@@ -7,6 +7,7 @@ const socket = io('http://localhost:5000', {
 
 const petImg = document.getElementById('pet-img');
 const speechBubble = document.getElementById('speech-bubble');
+const audioBubble = document.getElementById('audio-bubble');
 
 // 2. Listen for successful Socket.IO connection
 socket.on('connect', () => {
@@ -21,19 +22,35 @@ socket.on('message', (data) => {
         ? `Anger: ${anger.toFixed(2)}%`
         : (data?.message || 'Received update from backend');
 
-    displayMessage(text);
+    displayMessage(speechBubble, text);
     
     // Optional: Trigger talking animation/state
     triggerTalkingState();
 });
 
-function displayMessage(text) {
-    speechBubble.innerText = text;
-    speechBubble.style.display = 'block';
+// 3b. Handle audio anger messages
+socket.on('audio_message', (data) => {
+    console.log('Received audio message:', data);
+    const anger = data?.data;
+    const text = typeof anger === 'number'
+        ? `Audio anger: ${anger.toFixed(2)}`
+        : (data?.message || 'Received audio update');
+
+    displayMessage(audioBubble, text);
+    triggerTalkingState();
+});
+
+function displayMessage(target, text) {
+    target.innerText = text;
+    target.style.display = 'block';
 
     // Hide the bubble after 5 seconds
-    setTimeout(() => {
-        speechBubble.style.display = 'none';
+    if (target.hideTimer) {
+        clearTimeout(target.hideTimer);
+    }
+    target.hideTimer = setTimeout(() => {
+        target.style.display = 'none';
+        target.hideTimer = null;
     }, 5000);
 }
 
