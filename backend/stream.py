@@ -21,6 +21,23 @@ while True:
         for result in results:
             my_custom_function(result)
 
+        for res in results:
+            # 2. Get coordinates for the highlight
+            region = res["region"]
+            x, y, w, h = region['x'], region['y'], region['w'], region['h']
+            
+            # 3. Extract the Anger weight
+            anger_score = res["emotion"]["angry"]
+            
+            # 4. Draw the custom "Marker"
+            # Green box for the face
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            
+            # Display Anger Weight
+            label = f"Anger: {anger_score:.2f}%"
+            cv2.putText(frame, label, (x, y - 10), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
     except Exception as e:
         print(f"Error: {e}")
 
@@ -31,3 +48,4 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
+print("done")
