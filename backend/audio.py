@@ -61,6 +61,8 @@ class AudioStream:
                     continue
                 # Grabs the most recent audio chunks
                 raw_bytes = b''.join(self.audio_buffer[-required_chunks:])
+                # Clear the analyzed chunks to ensure fresh audio on next iteration
+                self.audio_buffer = self.audio_buffer[-required_chunks:]
             
             # The model expects a float32 NumPy array normalized between -1.0 and 1.0. 
             # PyAudio gives us 16-bit PCM bytes, so we convert and scale it down.
