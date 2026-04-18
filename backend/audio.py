@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(__name__)
 
 class AudioStream:
-    def __init__(self, rate=16000, chunk=1024, channels=1, interval=2.0) -> None:
+    def __init__(self, rate=16000, chunk=1024, channels=1, interval=4.0) -> None:
         """
         Initializes the audio configuration and emotion model.
 
@@ -26,7 +26,7 @@ class AudioStream:
         
         # ML integration
         logger.info("Initializing model...")
-        self.emotion_classifier = pipeline("audio-classification", model="ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition")
+        self.emotion_classifier = pipeline("audio-classification", model="superb/wav2vec2-base-superb-er")
         logger.info("Model loaded successfully.")
         
         # PyAudio setup
@@ -43,7 +43,7 @@ class AudioStream:
         with self.audio_buffer_lock:
             self.audio_buffer.append(in_data)
             
-            max_chunks = int((self.rate / self.chunk) * 3) # 3 seconds worth of audio
+            max_chunks = int((self.rate / self.chunk) * self.interval)
             if len(self.audio_buffer) > max_chunks:
                 self.audio_buffer.pop(0)
 
@@ -61,8 +61,6 @@ class AudioStream:
                     continue
                 # Grabs the most recent audio chunks
                 raw_bytes = b''.join(self.audio_buffer[-required_chunks:])
-                # Clear the analyzed chunks to ensure fresh audio on next iteration
-                self.audio_buffer = self.audio_buffer[-required_chunks:]
             
             # The model expects a float32 NumPy array normalized between -1.0 and 1.0. 
             # PyAudio gives us 16-bit PCM bytes, so we convert and scale it down.
@@ -71,8 +69,10 @@ class AudioStream:
             # Run inference and print results
             try:
                 predictions = self.emotion_classifier(audio_array)
-                top_prediction = predictions[0] # Grab the most confident class
-                logger.info(f"Detected emotion: {top_prediction['label']} (Confidence: {top_prediction['score']:.2f})")
+                # top_prediction = predictions[0] # Grab the most confident class
+                # logger.info(f"Detected emotion: {top_prediction['label']} (Confidence: {top_prediction['score']:.2f})")
+                
+                logger.info(f"Full predictions: {predictions}")
             except Exception as e:
                 logger.error(f"Inference error: {e}")
 
@@ -108,7 +108,7 @@ class AudioStream:
         self.audio_interface.terminate()
         logger.info("Audio stream terminated.")
 
-if __name__ == "__main__":
+def run_audio(sio):
     live_audio = AudioStream()
     
     try:
@@ -117,9 +117,10 @@ if __name__ == "__main__":
         
         # Keep the main thread alive
         while live_audio.stream_active:
+            # TODO: emit to sio
             time.sleep(0.1)
             
-    except KeyboardInterrupt:
-        pass
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
     finally:
         live_audio.stop()
