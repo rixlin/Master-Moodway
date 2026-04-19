@@ -2,7 +2,7 @@ const { io } = require('socket.io-client');
 
 // Connect using the Socket.IO protocol (matches backend/server.py)
 const socket = io('http://localhost:5000', {
-    transports: ['websocket', 'polling']
+    transports: ['websocket']
 });
 
 const petImg = document.getElementById('pet-img');
@@ -39,7 +39,7 @@ const latestData = {
 
 // 3. Handle incoming messages
 socket.on('message', (data) => {
-    console.log('Received message from backend:', data);
+    // console.log('Received message from backend:', data);
     const anger = data?.data;
     const text = typeof anger === 'number'
         ? `Anger: ${anger.toFixed(2)}%`
@@ -50,14 +50,11 @@ socket.on('message', (data) => {
     updateCrashOutBar();
     ifScoreThenTalk()
     // displayMessage(speechBubble, text);
-    
-    // Optional: Trigger talking animation/state
-    // triggerTalkingState();
 });
 
 // 3b. Handle audio anger messages
 socket.on('audio_message', (data) => {
-    console.log('Received audio message:', data);
+    // console.log('Received audio message:', data);
     const anger = data?.data;
     const text = typeof anger === 'number'
         ? `Audio anger: ${anger.toFixed(2)}`
@@ -68,15 +65,12 @@ socket.on('audio_message', (data) => {
     updateCrashOutBar();
     ifScoreThenTalk();
     // displayMessage(audioBubble, text);
-    // triggerTalkingState();
 });
 
 function ifScoreThenTalk(){
-    const audioScore = getAngerScore(latestData.audio);
-    const visualScore = getAngerScore(latestData.visual);
-    const angerScore = audioScore + visualScore;
+    const angerScore = getWeightedAngerScore();
 
-    if (angerScore <= 0.50) {
+    if (angerScore <= 0.80) {
         return false;
     }
 
@@ -87,9 +81,9 @@ function ifScoreThenTalk(){
 
     lastPlayAt = Date.now();
     isInCooldown = true;
-    
+
+    setSpeakingState(true);
     playRandomOogwayAudio();
-    
     // Release cooldown after delay
     setTimeout(() => {
         isInCooldown = false;
@@ -103,9 +97,7 @@ function updateCrashOutBar() {
         return;
     }
 
-    const audioScore = getAngerScore(latestData.audio);
-    const visualScore = getAngerScore(latestData.visual);
-    const rawScore = audioScore + visualScore;
+    const rawScore = getWeightedAngerScore();
     const normalized = clamp(rawScore, 0, 1);
 
     crashOutFill.style.height = `${(normalized * 100).toFixed(1)}%`;
@@ -118,6 +110,12 @@ function getAngerScore(payload) {
 
     const value = payload?.data;
     return typeof value === 'number' ? value : 0;
+}
+
+function getWeightedAngerScore() {
+    const audioScore = getAngerScore(latestData.audio);
+    const visualScore = getAngerScore(latestData.visual) * 0.01;
+    return (audioScore * 0.6) + (visualScore * 0.4);
 }
 
 function clamp(value, min, max) {
@@ -133,34 +131,41 @@ function playRandomOogwayAudio() {
         currentAudio.currentTime = 0;
     }
 
-    currentAudio = new Audio(audioPath);
-    currentAudio.play().catch((error) => {
+    const audio = new Audio(audioPath);
+    currentAudio = audio;
+
+    audio.addEventListener('ended', () => {
+        if (currentAudio !== audio) {
+            return;
+        }
+        setSpeakingState(false);
+        currentAudio = null;
+    });
+    audio.addEventListener('error', () => {
+        if (currentAudio !== audio) {
+            return;
+        }
+        setSpeakingState(false);
+        currentAudio = null;
+    });
+
+    audio.play().catch((error) => {
         console.error('Failed to play Oogway audio:', error);
+        if (currentAudio !== audio) {
+            return;
+        }
+        setSpeakingState(false);
+        currentAudio = null;
     });
 }
 
-function displayMessage(target, text) {
-    target.innerText = text;
-    target.style.display = 'block';
+function setSpeakingState(isSpeaking) {
+    petImg.src = isSpeaking
+        ? './assets/images/oogway-pose06.png'
+        : './assets/images/oogway-pose02.png';
 
-    // Hide the bubble after 5 seconds
-    if (target.hideTimer) {
-        clearTimeout(target.hideTimer);
-    }
-    target.hideTimer = setTimeout(() => {
-        target.style.display = 'none';
-        target.hideTimer = null;
-    }, 5000);
-}
-
-function triggerTalkingState() {
-    // Switch to your talking png/animation
-    petImg.src = './assets/images/oogway-pose06.png';
-    
-    // Switch back to idle after a delay
-    setTimeout(() => {
-        petImg.src = './assets/images/oogway-pose02.png';
-    }, 3000);
+    speechBubble.innerText = 'Oogway is talking...';
+    speechBubble.style.display = isSpeaking ? 'block' : 'none';
 }
 
 // 4. Handle errors

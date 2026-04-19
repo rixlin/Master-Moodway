@@ -57,7 +57,7 @@ class AudioStream:
     def _emotion_worker(self) -> None:
         """Background thread that periodically evaluates the buffer for emotion."""
         while self.stream_active:
-            time.sleep(self.interval) # Wait for the specified interval before analyzing
+            time.sleep(self.interval / 4) # Wait for the specified interval before analyzing
             
             with self.audio_buffer_lock:
                 # Ensure we have at least the required number of chunks for the specified interval

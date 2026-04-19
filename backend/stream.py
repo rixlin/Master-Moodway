@@ -16,10 +16,10 @@ def run_camera(sio):
     count = 0
 
     while True:
-        eventlet.sleep(0.1)
-        if count % 20 != 0:
-            count += 1
-            continue
+        eventlet.sleep(0)
+        # if count % 20 != 0:
+        #     count += 1
+        #     continue
         ret, frame = cap.read()
         running_anger = 0
         if not ret:
