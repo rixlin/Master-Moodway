@@ -25,6 +25,7 @@ const audioBasePath = './assets/audio/';
 const playCooldownMs = 20000;
 let lastPlayAt = 0;
 let currentAudio = null;
+let isInCooldown = false;
 
 // 2. Listen for successful Socket.IO connection
 socket.on('connect', () => {
@@ -79,13 +80,21 @@ function ifScoreThenTalk(){
         return false;
     }
 
-    const now = Date.now();
-    if (now - lastPlayAt < playCooldownMs) {
+    // Check the shared cooldown flag
+    if (isInCooldown) {
         return false;
     }
 
-    lastPlayAt = now;
+    lastPlayAt = Date.now();
+    isInCooldown = true;
+    
     playRandomOogwayAudio();
+    
+    // Release cooldown after delay
+    setTimeout(() => {
+        isInCooldown = false;
+    }, playCooldownMs);
+    
     return true;
 }
 
