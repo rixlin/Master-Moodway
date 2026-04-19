@@ -169,7 +169,7 @@ function setSpeakingState(isSpeaking) {
         ? './assets/images/oogway-pose06.png'
         : './assets/images/oogway-pose02.png';
 
-    speechBubble.innerText = 'Oogway is talking...';
+    speechBubble.innerText = 'Moodway is talking...';
     speechBubble.style.display = isSpeaking ? 'block' : 'none';
 }
 
