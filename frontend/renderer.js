@@ -8,6 +8,23 @@ const socket = io('http://localhost:5000', {
 const petImg = document.getElementById('pet-img');
 const speechBubble = document.getElementById('speech-bubble');
 const audioBubble = document.getElementById('audio-bubble');
+const crashOutFill = document.getElementById('crash-out-fill');
+const audioFiles = [
+    'oogway-audio01.mp3',
+    'oogway-audio02.mp3',
+    'oogway-audio03.mp3',
+    'oogway-audio04.mp3',
+    'oogway-audio05.mp3',
+    'oogway-audio06.mp3',
+    'oogway-audio07.mp3',
+    'oogway-audio08.mp3',
+    'oogway-audio09.mp3',
+    'oogway-audio10.mp3'
+];
+const audioBasePath = './assets/audio/';
+const playCooldownMs = 20000;
+let lastPlayAt = 0;
+let currentAudio = null;
 
 // 2. Listen for successful Socket.IO connection
 socket.on('connect', () => {
@@ -29,6 +46,7 @@ socket.on('message', (data) => {
 
     latestData.visual = data
 
+    updateCrashOutBar();
     ifScoreThenTalk()
     // displayMessage(speechBubble, text);
     
@@ -46,15 +64,70 @@ socket.on('audio_message', (data) => {
 
     latestData.audio = data
 
+    updateCrashOutBar();
     ifScoreThenTalk();
     // displayMessage(audioBubble, text);
     // triggerTalkingState();
 });
 
 function ifScoreThenTalk(){
-    if(latestData.audio + latestData.visual <= 0.50) {
+    const audioScore = getAngerScore(latestData.audio);
+    const visualScore = getAngerScore(latestData.visual);
+    const angerScore = audioScore + visualScore;
+
+    if (angerScore <= 0.50) {
+        return false;
+    }
+
+    const now = Date.now();
+    if (now - lastPlayAt < playCooldownMs) {
+        return false;
+    }
+
+    lastPlayAt = now;
+    playRandomOogwayAudio();
+    return true;
+}
+
+function updateCrashOutBar() {
+    if (!crashOutFill) {
         return;
     }
+
+    const audioScore = getAngerScore(latestData.audio);
+    const visualScore = getAngerScore(latestData.visual);
+    const rawScore = audioScore + visualScore;
+    const normalized = clamp(rawScore, 0, 1);
+
+    crashOutFill.style.height = `${(normalized * 100).toFixed(1)}%`;
+}
+
+function getAngerScore(payload) {
+    if (!payload) {
+        return 0;
+    }
+
+    const value = payload?.data;
+    return typeof value === 'number' ? value : 0;
+}
+
+function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+}
+
+function playRandomOogwayAudio() {
+    const filename = audioFiles[Math.floor(Math.random() * audioFiles.length)];
+    const audioPath = `${audioBasePath}${filename}`;
+
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+    }
+
+    currentAudio = new Audio(audioPath);
+    currentAudio.play().catch((error) => {
+        console.error('Failed to play Oogway audio:', error);
+    });
 }
 
 function displayMessage(target, text) {
