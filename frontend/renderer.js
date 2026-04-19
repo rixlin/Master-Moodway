@@ -1,7 +1,12 @@
 const { io } = require('socket.io-client');
 
+const { ipcRenderer } = require('electron');
+
+// Make the window ignore all mouse events
+ipcRenderer.send('set-ignore-mouse', true);
+
 // Connect using the Socket.IO protocol (matches backend/server.py)
-const socket = io('http://localhost:5000', {
+const socket = io('http://localhost:6000', {
     transports: ['websocket']
 });
 
