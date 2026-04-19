@@ -5,7 +5,6 @@ import pyaudio
 import threading
 import time
 from transformers import pipeline
-import eventlet
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
@@ -128,8 +127,7 @@ def run_audio(sio):
             eventlet.sleep(0)
             with live_audio.emotion_lock:
                 anger_confidence = live_audio.latest_anger_confidence
-
-            sio.emit('audio_message', {'data': anger_confidence})
+                sio.emit('audio_message', {'data': anger_confidence})
             
     except Exception as e:
         logger.error(f"An error occurred: {e}")
