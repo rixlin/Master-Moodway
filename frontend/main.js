@@ -12,7 +12,7 @@ function createWindow() {
   // Calculate coordinates: 
   // X = Total width minus window width
   // Y = Half of screen height minus half of window height
-  const x = width - winWidth;
+  const x = 0;
   const y = Math.floor((height - winHeight) / 2);
 
   const win = new BrowserWindow({
