@@ -14,6 +14,11 @@ socket.on('connect', () => {
     console.log('Connected to Oogway Backend:', socket.id);
 });
 
+const latestData = {
+    visual: null,
+    audio: null
+};
+
 // 3. Handle incoming messages
 socket.on('message', (data) => {
     console.log('Received message from backend:', data);
@@ -22,10 +27,13 @@ socket.on('message', (data) => {
         ? `Anger: ${anger.toFixed(2)}%`
         : (data?.message || 'Received update from backend');
 
-    displayMessage(speechBubble, text);
+    latestData.visual = data
+
+    ifScoreThenTalk()
+    // displayMessage(speechBubble, text);
     
     // Optional: Trigger talking animation/state
-    triggerTalkingState();
+    // triggerTalkingState();
 });
 
 // 3b. Handle audio anger messages
@@ -36,9 +44,18 @@ socket.on('audio_message', (data) => {
         ? `Audio anger: ${anger.toFixed(2)}`
         : (data?.message || 'Received audio update');
 
-    displayMessage(audioBubble, text);
-    triggerTalkingState();
+    latestData.audio = data
+
+    ifScoreThenTalk();
+    // displayMessage(audioBubble, text);
+    // triggerTalkingState();
 });
+
+function ifScoreThenTalk(){
+    if(latestData.audio + latestData.visual <= 0.50) {
+        return;
+    }
+}
 
 function displayMessage(target, text) {
     target.innerText = text;
