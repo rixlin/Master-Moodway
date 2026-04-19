@@ -2,7 +2,7 @@
 
 > Feeling like you're about to crash out? Reach your inner peace with Master Moodway.
 
-Master Moodway is an emotional support tool that tracks user anger using Deepface and Wav2Vec2.
+Master Moodway is an emotional support tool that tracks user anger in real-time using Deepface and Wav2Vec2.
 
 Built for Rutgers IEEE X HART Build-a-thon (Spring 2026).
 
