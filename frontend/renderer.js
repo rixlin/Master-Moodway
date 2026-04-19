@@ -27,7 +27,7 @@ const audioFiles = [
     'oogway-audio10.mp3'
 ];
 const audioBasePath = './assets/audio/';
-const playCooldownMs = 20000;
+const playCooldownMs = 15000;
 let lastPlayAt = 0;
 let currentAudio = null;
 let isInCooldown = false;
@@ -75,7 +75,7 @@ socket.on('audio_message', (data) => {
 function ifScoreThenTalk(){
     const angerScore = getWeightedAngerScore();
 
-    if (angerScore <= 0.80) {
+    if (angerScore <= 0.60) {
         return false;
     }
 
