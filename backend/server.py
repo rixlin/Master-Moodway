@@ -14,4 +14,4 @@ def connect(sid, environ):
 if __name__ == '__main__':
     eventlet.spawn(stream.run_camera, sio)
     eventlet.spawn(audio.run_audio, sio)
-    eventlet.wsgi.server(eventlet.listen(('', 5000)), app)
+    eventlet.wsgi.server(eventlet.listen(('', 6000)), app)
