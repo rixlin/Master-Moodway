@@ -56,11 +56,11 @@ function displayMessage(target, text) {
 
 function triggerTalkingState() {
     // Switch to your talking png/animation
-    petImg.src = 'oogway-talking.png';
+    petImg.src = './assets/images/oogway-pose06.png';
     
     // Switch back to idle after a delay
     setTimeout(() => {
-        petImg.src = 'oogway-idle.gif';
+        petImg.src = './assets/images/oogway-pose02.png';
     }, 3000);
 }
 
