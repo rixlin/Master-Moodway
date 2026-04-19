@@ -97,7 +97,7 @@ class AudioStream:
             channels=self.channels,
             rate=self.rate,
             input=True,
-            output=True,
+            output=False,
             frames_per_buffer=self.chunk,
             stream_callback=self._audio_callback
         )
